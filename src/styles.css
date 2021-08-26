@@ -11,13 +11,14 @@ html,
 }
 
 .container {
-  width: 50%;
-  height: 100%;
+  width: 80%;
+  height: 80%;
   border: 1px solid red;
+  left: 5%;
+  position: absolute;
 }
 
 .draggable-container {
-  position: absolute;
   top: 0%;
   left: 90%;
   width: 200px;

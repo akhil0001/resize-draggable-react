@@ -1,10 +1,15 @@
-import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import React, { useRef, useEffect, useLayoutEffect } from "react";
 
-const checkX = (positionX, width, parentWidth) =>
-  positionX + width < parentWidth;
-const checkY = (positionY, height, parentHeight) =>
-  positionY + height < parentHeight;
+const isInRange = ({parentX, parentY, childX, childY}) => {
+  console.log(childX >=0, 'x>0');
+  console.log(childY >=0, 'y>0' );
+  console.log(childX <= parentX, 'childX <= parentX');
+  console.log(childY <= parentY, 'childY <= parentY');
+ 
+ const flag = childX >=0 && childX <=parentX && childY >= 0 && childY <= parentY;
 
+ return flag;
+}
 const quickAndDirtyStyle = {
   width: "200px",
   height: "200px",
@@ -24,31 +29,43 @@ function usePrevious(value) {
   return ref.current;
 }
 
-export const DraggableContainer = ({
-  pressed,
+export const DraggableContainer = React.forwardRef(({
   setPressed,
   parentWidth,
-  parentHeight
-}) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  parentHeight,
+  position,
+  setPosition,
+},ref) => {
   const prevParentDims = usePrevious({ parentWidth, parentHeight });
-  const ref = useRef();
 
   useLayoutEffect(() => {
     if (prevParentDims == null) return;
     const { parentWidth: prevW, parentHeight: prevH } = prevParentDims;
     const deltaX = parentWidth - prevW;
     const deltaY = parentHeight - prevH;
-    if (ref.current && deltaX !== 0 && prevW !== 1 && prevH !== 1) {
-      console.log({ prevW, deltaX });
-      setPosition({
-        x: position.x + deltaX,
-        y: position.y + deltaY
-      });
+    if (ref.current  && prevW !== 0 && prevH !== 0) {
+    const newX = position.x + deltaX;
+    const newY = position.y + deltaY;
 
-      ref.current.style.transform = `translate(${position.x + deltaX}px, ${
-        position.y + deltaY
-      }px)`;
+    if(deltaX !== 0 || deltaY !== 0){
+      setPosition({
+        x: newX < 0 || newX+ ref.current.offsetWidth > parentWidth ? 0 : newX,
+        y: newY < 0 || newY + ref.current.offsetHeight > parentHeight ? 0 : newY
+      })
+    }
+
+      // let newX = position.x + deltaX* widthRatio
+      // if(newX <= 0){
+      //   newX = 0;
+      // }
+      // else if(newX >= parentWidth){
+      //   console.log('over')
+      //   newX = position.x - deltaX* widthRatio
+      // }
+      // setPosition({
+      //   x: newX,
+      //   y: position.y + deltaY
+      // });
     }
   }, [parentHeight, parentWidth, prevParentDims, position]);
 
@@ -59,37 +76,14 @@ export const DraggableContainer = ({
     }
   }, [position, parentWidth]);
   // Update the current position if mouse is down
-  const onMouseMove = (event) => {
-    if (pressed) {
-      console.log();
-      setPosition({
-        x: checkX(
-          position.x + event.movementX,
-          ref.current?.offsetWidth,
-          parentWidth
-        )
-          ? position.x + event.movementX
-          : position.x,
-        y: checkY(
-          position.y + event.movementY,
-          ref.current?.offsetHeight,
-          parentHeight
-        )
-          ? position.y + event.movementY
-          : position.y
-      });
-    }
-  };
 
   return (
     <div
       ref={ref}
       style={quickAndDirtyStyle}
-      onMouseMove={onMouseMove}
       onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
     >
-      <p>{pressed ? "Dragging..." : "Press to drag"}</p>
+    <p style={{left: position.x, right: position.y}}>{position.x},{position.y}</p>
     </div>
   );
-};
+});
